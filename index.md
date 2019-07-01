@@ -21,15 +21,15 @@ Converting an existing Jupyter Notebook - running on-prem, even on a laptop - to
 
 #### Kale: a simpler KFP interface designed for Data Scientists
 
-Kale was designed to address the difficulties by providing a tool to simplify the deployment process of a Jupyter Notebook into Kubeflow Pipelines workflows. Translating Jupyter Notebook directly into a KFP pipelines ensure that all the processing building blocks are well organized and independent from each other, while also leveraging on the experiment tracking and organization provided out-of-the-box by Kubeflow.
+Kale was designed to address these difficulties by providing a tool to simplify the deployment process of a Jupyter Notebook into Kubeflow Pipelines workflows. Translating Jupyter Notebook directly into a KFP pipeline ensures that all the processing building blocks are well organized and independent from each other, while also leveraging on the experiment tracking and workflows organization provided out-of-the-box by Kubeflow.
 
-The main idea behind Kale is to exploit the built-in Jupyter tagging feature [^1] [^2] to:
+The main idea behind Kale is to exploit the built-in Jupyter [tagging feature](https://jupyter-notebook.readthedocs.io/en/stable/changelog.html#cell-tags) (in JupyterLab with [this](https://github.com/jupyterlab/jupyterlab-celltags) extension) to:
 
-1. assign cells to specific pipeline components
-2. define the (execution) dependencies between them
-3. merge together multiple cells into a single pipeline component
+1. Assign code cells to specific pipeline components
+2. Merge together multiple cells into a single pipeline component
+3. Define the (execution) dependencies between them
 
-Kale takes as input the tagged Jupyter Notebook and automatically generates a standalone Python script that describes the KFP pipeline using a series of KFP *lightweight components*, corresponding to the tagged jupyter cells.
+Kale takes as input the tagged Jupyter Notebook and generates a standalone Python script that defines the KFP pipeline using [*lightweight components*](https://www.kubeflow.org/docs/pipelines/sdk/lightweight-python-components/), based on the cell tags. 
 
 *Image here showing a few tagged cells and the resulting pipeline*
 
@@ -38,63 +38,6 @@ One question you might raise is: *How does Kale manage to resolve the data depen
 Kale runs a series of static analyses over the Python components to detect where variables and objects are first declared and then used. In this way Kale creates an internal graph representation describing the data dependencies between the steps. Using this knowledge, Kale marshals these objects between the pipeline steps by serializing the variables into a shared PVC. Both marshalling and management of the shared PVC is done transparently to the user, who does not need to worry about this.
 
 
-
-
-
-
-
-
-Kale is a Python package that aims at automatically deploy a general purpose Jupyter Notebook as a running [Kubeflow Pipelines](https://github.com/kubeflow/pipelines) instance, without requiring the use the specific KFP DSL.
-
-The general idea of kale is to automatically arrange the cells included in a notebook, and transform them into a unified KFP-compliant pipeline. To do so, the user is only required to decide which cells correspond to which pipeline step, by the use of tags. In this way, a researcher can better focus on building and testing its code locally, and then scale it in a simple, organized and controlled way.
-
-## Tagging language
-
-Jupyter provides a tagging feature out-of-the-box, that lets you associate each cells with custom defined tags. The feature is available also in JupyterLab via the [jupyterlab-celltags](https://github.com/jupyterlab/jupyterlab-celltags) extension.
-
-The tags are used to tell Kale how to convert the notebook's code cells into an execution graph, by specifying the execution dependencies between the pipeline steps and which code cells to merge together.
-
-This is a list of tags recognized by Kale:
-
-| Tag | Description | Example |
-| :---: | :---: | :---: |
-| `^block:<block_name>(;<block_name>)*$` | Assign the current cell to a (multiple) pipeline step | `block:train-model`<br>`block:processing-A;processing-B`|  
-| `^prev:<block_name>(;<block_name>)*$` | Define an execution dependency of the current cell to `n` other pipeline steps | `prev:load-dataset
-| <code>imports&#124;functions</code> | Tell Kale to add this code block at the beginning of every pipeline code block. Useful to add imports/function to every pipeline step | - |  
-| `skip` | 'Hide' the current cell from Kale. | - |
-
-Where `<block_name>` is matched against the regex: `[a-z0-9]`. So any string containing only digits and lowercase characters.
-
-## Installation
-
-Kale is provided as a Python package. Just clone the repository to your local machine and install the package in a virtual environment. 
-
-```bash
-# Clone the repo to your local environment
-git clone https://github.com/StefanoFioravanzo/kale.git
-cd kale
-# Install the package in your virtualenv
-python setup.py install
-```
-
-## Getting Started
-
-First you need to have a running Kubeflow instance (Kubeflow [getting started guide](https://www.kubeflow.org/docs/started/getting-started/)).
-
-
-Kale provides a CLI command. Run `kale --help` for a detailed description of the execution parameters.
-
-Example:
-
-```bash
-kale --nb examples/base_example_numpy.ipynb \
-	--pipeline_name numpy_example \
-	--pipeline_descr "Numpy Example" \
-	--docker_image stefanofioravanzo/kale-kfp-examples:0.1
-```
-This will produce a python script `examples/kfp_numpy_examples.kfp.py` containing all the definitions of the KFP stand-alone functions and the necessary code to define and deploy a pipeline. If run with the `--deploy` flag, Kale will try to automatically deploy the generated pipeline (default KFP url is `localhost:8080`, see `kale` CLI parameters for customization).
-
-Have a look at the notebooks under the examples folder to start experimenting with Kale.
 
 ## Architecture
 
@@ -141,20 +84,8 @@ Common backends to support multiple data types are registered in `marshal/backen
 
 This module provides a single function `gen_kfp_code` that exploits the Jinja2 templating engine to generate a fully functional python script. The templates used are under the `templates/` folder.
 
-## Flask Server
+## Installation and Usage
 
-The package provides the `kale_server` CLI command that runs a Flask server. The Flask server accepts requests at `localhost:5000/kale`. The API accepts POST requests containing a Jupyter Notebook in raw format (JSON) and will call the main Kale module to deploy the notebook to a KFP instance.
+For more information about the project, installation and usage documentation, head over to Kale [main repository](https://github.com/kubeflow-kale/kale)
 
-`kale/` API available parameters:
-
-- `nb`: Raw JSON Jupyter Notebook
-- `deploy`: Boolean Flag. `True` to deploy the Notebook automatically
-- `kfp_port`: Port of the running KFP instance
-- `pipeline_name`: Name of the resulting KFP pipeline
-- `pipeline_descr`: Description of the resulting KFP pipeline
-- `docker_image`: Docker image to use for the pipeline steps
-
-## JupyterLab Extension
-
-Under `extensions/kale-toolbar-runner` you can find the code of a JupyterLab extension that adds a new Button in the Notebook toolbar. The related action will call the `localhost:5000/kale` API sending the currently active Notebook. This way one can easily deploy a Notebook to KFP without leaving the JupyterLab UI.
-
+For examples and use cases showcasing Kale in data science pipelines, head over to the [Examples Repository](https://github.com/kubeflow-kale/examples)
