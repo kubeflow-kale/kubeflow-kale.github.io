@@ -1,4 +1,4 @@
-![Kale Logo](https://raw.githubusercontent.com/StefanoFioravanzo/kale/master/docs/imgs/kale_logo.png)
+![Kale Banner](https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/banner.png)
 
 ---------------------------------------------------------------------
 
