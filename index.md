@@ -33,21 +33,25 @@ The main idea behind Kale is to exploit the built-in Jupyter [tagging feature](h
   <img src="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/jupy-to-kfp.png" alt="Kubeflow Kale Deployment - From Jupyter Notebook to KFP pipeline"/>
 </a>
 
-Kale takes as input the tagged Jupyter Notebook and generates a standalone Python script that defines the KFP pipeline using [*lightweight components*](https://www.kubeflow.org/docs/pipelines/sdk/lightweight-python-components/), based on the cell tags. 
+Kale takes as input the tagged Jupyter Notebook and generates a standalone Python script that defines the KFP pipeline using [*lightweight components*](https://www.kubeflow.org/docs/pipelines/sdk/lightweight-python-components/), based on the cells annotations. 
 
-*Image here showing a few tagged cells and the resulting pipeline*
+---
 
 One question you might raise is: *How does Kale manage to resolve the data dependencies between the steps, thus making available the notebook variables throughout the pipeline execution?*
 
-Kale runs a series of static analyses over the Python components to detect where variables and objects are first declared and then used. In this way Kale creates an internal graph representation describing the data dependencies between the steps. Using this knowledge, Kale marshals these objects between the pipeline steps by serializing the variables into a shared PVC. Both marshalling and management of the shared PVC is done transparently to the user, who does not need to worry about this.
+Kale runs a series of static analyses over the Notebook's source Python code to detect where variables and objects are first declared and then used. In this way, Kale creates an internal graph representation describing the data dependencies between the pipeline steps. Using this knowledge, Kale injects code at the beginning and at the end of each component to marshal these objects into a shared PVC during execution. Both marshalling and provisioning of the shared PVC is completely transparent to the user.
 
 <a href="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/pvc-lifecycle.png" target="_blank">
   <img src="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/pvc-lifecycle.png" alt="Kubeflow Kale Deployment - PVC Lifecycle"/>
 </a>
 
-## Architecture
+## Deploy a Notebook from Jupyter UI
 
-`core.py` contains the `Kale` class, main entry-point of the application. The function `run` does the conversion from jupyter notebook to kfp pipeline by calling all the other sub-modules.
+Kale can be installed in a Python environment and executed from CLI, giving as input the annotated Jupyter Notebook and the endpoint of the desired KFP deployment. With a single CLI call Kale convert the annotated notebook and deploys the generated Python script (describing the KFP pipeline) to the KFP endpoint.
+
+Since the CLI is not simple and abstract for us, we build a JupyterLab extension to trigger the conversion and deployment procedure *directly* from the Jupyter UI. In this way, a data scientist can go from prototyping to deployment without needing to enter the terminal one single time.
+
+## Architecture
 
 Kale was developed with a modular design. There are 4 main modules, each with a specific functionality.
 
