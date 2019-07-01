@@ -2,6 +2,48 @@
 
 ---------------------------------------------------------------------
 
+#### TL;DR
+
+Kale (Kubeflow Automated Pipelines Engine) is a tool composed of a Jupyter extension and a Python engine that lets a user deploy a Jupyter Notebook into a [Kubeflow Pipelines](https://github.com/kubeflow/pipelines) workflow just by tagging the Notebook cells - no KFP SDK code required.
+
+#### Introduction
+
+In our experience, the machine learning and data processing prototyping phase often happens using Jupyter Notebooks. This can result in disorganized code that performs data processing, feature engineering, model definition, training and testing - all into the same notebook. Experiments can become hard to maintain and reproduce, possibly leading to wrong results and a lot of additional work. A messy ML pipeline makes it much harder also to deploy it in the Cloud for scale up and production.
+
+Kubeflow is becoming the standard de-facto platform when dealing with large scale machine learning workflows on top of Kubernetes. It is designed to simplify the setup, deployment and monitoring of Machine Learning jobs both in the Cloud and on-premises clusters, leveraging on and ecosystem of Cloud Native components. Together with the newly introduced Kubeflow Pipelines (KFP) platform, Kubeflow can help data scientist and software engineers to better organize end-to-end Machine Learning projects, from on-premise prototyping to scaling up in the Cloud and production serving.
+
+--
+
+Despite being designed to be simple and accessible, Kubeflow Pipelines' Python SDK can still result difficult for ML practitioners without a software engineering background. Many data scientists, especially in the research field, come from a physics or maths backgrounds, often lacking the engineering expertise to develop complex deployment and infrastructure setup procedures.
+
+Converting an existing Jupyter Notebook - running on-prem, even on a laptop - to a KFP pipeline, can become a challenging task when dealing with complex workflows. 
+
+
+#### Kale: a simpler KFP interface designed for Data Scientists
+
+Kale was designed to address the difficulties by providing a tool to simplify the deployment process of a Jupyter Notebook into Kubeflow Pipelines workflows. Translating Jupyter Notebook directly into a KFP pipelines ensure that all the processing building blocks are well organized and independent from each other, while also leveraging on the experiment tracking and organization provided out-of-the-box by Kubeflow.
+
+The main idea behind Kale is to exploit the built-in Jupyter tagging feature [^1] [^2] to:
+
+1. assign cells to specific pipeline components
+2. define the (execution) dependencies between them
+3. merge together multiple cells into a single pipeline component
+
+Kale takes as input the tagged Jupyter Notebook and automatically generates a standalone Python script that describes the KFP pipeline using a series of KFP *lightweight components*, corresponding to the tagged jupyter cells.
+
+*Image here showing a few tagged cells and the resulting pipeline*
+
+One question you might raise is: *How does Kale manage to resolve the data dependencies between the steps, thus making available the notebook variables throughout the pipeline execution?*
+
+Kale runs a series of static analyses over the Python components to detect where variables and objects are first declared and then used. In this way Kale creates an internal graph representation describing the data dependencies between the steps. Using this knowledge, Kale marshals these objects between the pipeline steps by serializing the variables into a shared PVC. Both marshalling and management of the shared PVC is done transparently to the user, who does not need to worry about this.
+
+
+
+
+
+
+
+
 Kale is a Python package that aims at automatically deploy a general purpose Jupyter Notebook as a running [Kubeflow Pipelines](https://github.com/kubeflow/pipelines) instance, without requiring the use the specific KFP DSL.
 
 The general idea of kale is to automatically arrange the cells included in a notebook, and transform them into a unified KFP-compliant pipeline. To do so, the user is only required to decide which cells correspond to which pipeline step, by the use of tags. In this way, a researcher can better focus on building and testing its code locally, and then scale it in a simple, organized and controlled way.
