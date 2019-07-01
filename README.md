@@ -12,7 +12,7 @@ In our experience, the machine learning and data processing prototyping phase of
 
 Kubeflow is becoming the standard de-facto platform when dealing with large scale machine learning workflows on top of Kubernetes. It is designed to simplify the setup, deployment and monitoring of Machine Learning jobs both in the Cloud and on-premises clusters, leveraging on and ecosystem of Cloud Native components. Together with the newly introduced Kubeflow Pipelines (KFP) platform, Kubeflow can help data scientist and software engineers to better organize end-to-end Machine Learning projects, from on-premise prototyping to scaling up in the Cloud and production serving.
 
---
+---
 
 Despite being designed to be simple and accessible, Kubeflow Pipelines' Python SDK can still result difficult for ML practitioners without a software engineering background. Many data scientists, especially in the research field, come from a physics or maths backgrounds, often lacking the engineering expertise to develop complex deployment and infrastructure setup procedures.
 
