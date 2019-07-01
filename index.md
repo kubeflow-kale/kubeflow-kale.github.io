@@ -29,10 +29,8 @@ The main idea behind Kale is to exploit the built-in Jupyter [tagging feature](h
 2. Merge together multiple cells into a single pipeline component
 3. Define the (execution) dependencies between them
 
-<!--![JupyToKFP](https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/jupy-to-kfp.png)-->
-
 <a href="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/jupy-to-kfp.png" target="_blank">
-  <img src="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/jupy-to-kfp.png"/>
+  <img src="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/jupy-to-kfp.png" alt="Kubeflow Kale Deployment - From Jupyter Notebook to KFP pipeline"/>
 </a>
 
 Kale takes as input the tagged Jupyter Notebook and generates a standalone Python script that defines the KFP pipeline using [*lightweight components*](https://www.kubeflow.org/docs/pipelines/sdk/lightweight-python-components/), based on the cell tags. 
@@ -43,7 +41,9 @@ One question you might raise is: *How does Kale manage to resolve the data depen
 
 Kale runs a series of static analyses over the Python components to detect where variables and objects are first declared and then used. In this way Kale creates an internal graph representation describing the data dependencies between the steps. Using this knowledge, Kale marshals these objects between the pipeline steps by serializing the variables into a shared PVC. Both marshalling and management of the shared PVC is done transparently to the user, who does not need to worry about this.
 
-
+<a href="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/pvc-lifecycle.png" target="_blank">
+  <img src="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/pvc-lifecycle.png" alt="Kubeflow Kale Deployment - PVC Lifecycle"/>
+</a>
 
 ## Architecture
 
