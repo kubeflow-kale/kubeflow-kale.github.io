@@ -3,14 +3,13 @@
 ---------------------------------------------------------------------
 
 > #### TL;DR
-
-> Kale (Kubeflow Automated Pipelines Engine) is a tool composed of a Jupyter extension and a Python engine that lets a user deploy a Jupyter Notebook into a [Kubeflow Pipelines](https://github.com/kubeflow/pipelines) workflow just by tagging the Notebook cells - no KFP SDK code required.
+Kale lets you deploy Jupyter Notebooks that run on your laptop to Kubeflow Pipelines, without requiring *any* of the Kubeflow SDK boilerplate. You can define pipelines just by annotating a Notebook's code cells and clicking a deployment button in the Jupyter UI. Kale will take care of converting the Notebook to a valid Kubeflow Pipelines deployment, taking care of resolving data dependencies and managing the pipeline's lifecycle.
 
 #### Introduction
 
 In our experience, the machine learning and data processing prototyping phase often happens using Jupyter Notebooks. This can result in disorganized code that performs data processing, feature engineering, model definition, training and testing - all into the same notebook. Experiments can become hard to maintain and reproduce, possibly leading to wrong results and a lot of additional work. A messy ML pipeline makes it much harder also to deploy it in the Cloud for scale up and production.
 
-Kubeflow is becoming the standard de-facto platform when dealing with large scale machine learning workflows on top of Kubernetes. It is designed to simplify the setup, deployment and monitoring of Machine Learning jobs both in the Cloud and on-premises clusters, leveraging on and ecosystem of Cloud Native components. Together with the newly introduced Kubeflow Pipelines (KFP) platform, Kubeflow can help data scientist and software engineers to better organize end-to-end Machine Learning projects, from on-premise prototyping to scaling up in the Cloud and production serving.
+Kubeflow is becoming the standard de-facto platform when dealing with large scale machine learning workflows on top of Kubernetes. It is designed to simplify the setup, deployment and monitoring of Machine Learning jobs both in the Cloud and on-premises clusters, leveraging on and ecosystem of Cloud Native components. Together with the newly introduced [Kubeflow Pipelines](https://github.com/kubeflow/pipelines) (KFP) platform, Kubeflow can help data scientist and software engineers to better organize end-to-end Machine Learning projects, from on-premise prototyping to scaling up in the Cloud and production serving.
 
 ---
 
@@ -19,7 +18,7 @@ Despite being designed to be simple and accessible, Kubeflow Pipelines' Python S
 Converting an existing Jupyter Notebook - running on-prem, even on a laptop - to a KFP pipeline, can become a challenging task when dealing with complex workflows. 
 
 
-#### Kale: a simpler KFP interface designed for Data Scientists
+#### Kale: a simple KFP deployment tool designed for Data Scientists
 
 Kale was designed to address these difficulties by providing a tool to simplify the deployment process of a Jupyter Notebook into Kubeflow Pipelines workflows. Translating Jupyter Notebook directly into a KFP pipeline ensures that all the processing building blocks are well organized and independent from each other, while also leveraging on the experiment tracking and workflows organization provided out-of-the-box by Kubeflow.
 
@@ -37,7 +36,7 @@ Kale takes as input the tagged Jupyter Notebook and generates a standalone Pytho
 
 ---
 
-One question one might raise is: *How does Kale manage to resolve the data dependencies, thus making the notebook variables available throughout the pipeline execution?*
+A question one might raise is: *How does Kale manage to resolve the data dependencies, thus making the notebook variables available throughout the pipeline execution?*
 
 Kale runs a series of static analyses over the Notebook's source Python code to detect where variables and objects are first declared and then used. In this way, Kale creates an internal graph representation describing the data dependencies between the pipeline steps. Using this knowledge, Kale injects code at the beginning and at the end of each component to marshal these objects into a shared PVC during execution. Both marshalling and provisioning of the shared PVC is completely transparent to the user.
 
@@ -45,7 +44,7 @@ Kale runs a series of static analyses over the Notebook's source Python code to 
   <img src="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/pvc-lifecycle.png" alt="Kubeflow Kale Deployment - PVC Lifecycle"/>
 </a>
 
-Kale's internal marshalling module is very flexible in that it can despatch variable's serialization to native functions at runtime, based on the object's data type. This happens also for de-serialization, by reading the file's extension. When the object type is not mapped to a native serialization function, Kale falls back to using the `dill` package, a performant general purpose serialization Python library (superset of `pickle`). guaranteeing maximum performance in terms of disk space and computation time.
+The marshalling module is very flexible in that it can despatch variable's serialization to native functions at runtime, based on the object's data type. This happens also for de-serialization, by reading the file's extension. When the object type is not mapped to a native serialization function, Kale falls back to using the `dill` package, a performant general purpose serialization Python library (superset of `pickle`). guaranteeing maximum performance in terms of disk space and computation time.
 
 ## Modularity and Flexibility
 
