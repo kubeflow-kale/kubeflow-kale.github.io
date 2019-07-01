@@ -29,7 +29,11 @@ The main idea behind Kale is to exploit the built-in Jupyter [tagging feature](h
 2. Merge together multiple cells into a single pipeline component
 3. Define the (execution) dependencies between them
 
-![JupyToKFP](https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/jupy-to-kfp.png)
+<!--![JupyToKFP](https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/jupy-to-kfp.png)-->
+
+<a href="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/jupy-to-kfp.png" target="_blank">
+  <img src="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/jupy-to-kfp.png"/>
+</a>
 
 Kale takes as input the tagged Jupyter Notebook and generates a standalone Python script that defines the KFP pipeline using [*lightweight components*](https://www.kubeflow.org/docs/pipelines/sdk/lightweight-python-components/), based on the cell tags. 
 
