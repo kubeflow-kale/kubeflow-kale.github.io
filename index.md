@@ -7,9 +7,9 @@ Kale lets you deploy Jupyter Notebooks that run on your laptop to Kubeflow Pipel
 
 #### Introduction
 
-In our experience, the machine learning and data processing prototyping phase often happens using Jupyter Notebooks. This can result in disorganized code that performs data processing, feature engineering, model definition, training and testing - all into the same notebook. Experiments can become hard to maintain and reproduce, possibly leading to wrong results and a lot of additional work. A messy ML pipeline makes it much harder also to deploy it in the Cloud for scale up and production.
+In our experience, the machine learning and data processing prototyping phase often happens using Jupyter Notebooks. This can result in disorganized code that performs data processing, feature engineering, model definition, training and testing - all into the same notebook. Experiments can become messy to maintain and reproduce, possibly leading to wrong results and a lot of wasted work. A disorganized ML pipeline makes it much harder also to deploy it in the Cloud for scale up and production.
 
-Kubeflow is becoming the standard de-facto platform when dealing with large scale machine learning workflows on top of Kubernetes. It is designed to simplify the setup, deployment and monitoring of Machine Learning jobs both in the Cloud and on-premises clusters, leveraging on and ecosystem of Cloud Native components. Together with the newly introduced [Kubeflow Pipelines](https://github.com/kubeflow/pipelines) (KFP) platform, Kubeflow can help data scientist and software engineers to better organize end-to-end Machine Learning projects, from on-premise prototyping to scaling up in the Cloud and production serving.
+Kubeflow is a community driven open source effort to building a ML toolkit to deal with large scale machine learning workflows on top of Kubernetes. It is designed to simplify the setup, deployment and monitoring of Machine Learning jobs both in the Cloud and on-premises clusters, leveraging on and ecosystem of Cloud Native components. Together with the newly introduced [Kubeflow Pipelines](https://github.com/kubeflow/pipelines) (KFP) platform, Kubeflow can help data scientist and software engineers to better organize end-to-end Machine Learning projects, from on-premise prototyping to scaling up in the Cloud and production serving.
 
 ---
 
@@ -22,7 +22,7 @@ Converting an existing Jupyter Notebook - running on-prem, even on a laptop - to
 
 Kale was designed to address these difficulties by providing a tool to simplify the deployment process of a Jupyter Notebook into Kubeflow Pipelines workflows. Translating Jupyter Notebook directly into a KFP pipeline ensures that all the processing building blocks are well organized and independent from each other, while also leveraging on the experiment tracking and workflows organization provided out-of-the-box by Kubeflow.
 
-The main idea behind Kale is to exploit the built-in Jupyter [tagging feature](https://jupyter-notebook.readthedocs.io/en/stable/changelog.html#cell-tags) (in JupyterLab with [this](https://github.com/jupyterlab/jupyterlab-celltags) extension) to:
+The main idea behind Kale is to exploit the JSON structure of Notebooks to annotate them, both at the Notebook level (Notebook metadata) and at the single Cell level (Cell metadata). This annotations allow you to:
 
 1. Assign code cells to specific pipeline components
 2. Merge together multiple cells into a single pipeline component
@@ -32,7 +32,7 @@ The main idea behind Kale is to exploit the built-in Jupyter [tagging feature](h
   <img src="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/jupy-to-kfp.png" alt="Kubeflow Kale Deployment - From Jupyter Notebook to KFP pipeline"/>
 </a>
 
-Kale takes as input the tagged Jupyter Notebook and generates a standalone Python script that defines the KFP pipeline using [*lightweight components*](https://www.kubeflow.org/docs/pipelines/sdk/lightweight-python-components/), based on the cells annotations. 
+Kale takes as input the annotated Jupyter Notebook and generates a standalone Python script that defines the KFP pipeline using [*lightweight components*](https://www.kubeflow.org/docs/pipelines/sdk/lightweight-python-components/), based on the Notebook and Cells annotations. 
 
 ---
 
@@ -44,7 +44,7 @@ Kale runs a series of static analyses over the Notebook's source Python code to 
   <img src="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/pvc-lifecycle.png" alt="Kubeflow Kale Deployment - PVC Lifecycle"/>
 </a>
 
-The marshalling module is very flexible in that it can despatch variable's serialization to native functions at runtime, based on the object's data type. This happens also for de-serialization, by reading the file's extension. When the object type is not mapped to a native serialization function, Kale falls back to using the `dill` package, a performant general purpose serialization Python library (superset of `pickle`). guaranteeing maximum performance in terms of disk space and computation time.
+The marshalling module is very flexible in that it can despatch variable's serialization to native functions at runtime, based on the object's data type. This happens also for de-serialization, by reading the file's extension. When the object type is not mapped to a native serialization function, Kale falls back to using the `dill` package, a performant general purpose serialization Python library (superset of `pickle`), guaranteeing maximum performance in terms of disk space and computation time.
 
 ## Modularity and Flexibility
 
@@ -52,22 +52,20 @@ Kale's output is an executable self-contained Python script, written with the KF
 
 This solution makes Kale very flexible and easy to update to new SDK APIs and breaking changes. All the modules that read the annotated notebook, resolve data dependencies and build the execution graph are independent of KFP and Kubeflow in general. Ironically, Kale could be adapted pretty easily to any workflow runtime that makes available a Python SDK to define workflows in terms of Python functions.
 
-## Deploy a Notebook from Jupyter UI
+## Jupyter Kale Launcher
 
-Kale can be installed in a Python environment and executed from CLI, receiving as input the annotated Jupyter Notebook and the endpoint of the desired KFP deployment. With a single CLI call Kale converts the annotated notebook and deploys the generated executable Python script (describing the KFP pipeline) to the KFP endpoint.
+Kale can be installed in a Python environment and executed from CLI, receiving as input the annotated Jupyter Notebook. Annotating a Notebook as a JSON file is not very user-friendly, so we have built a JupyterLab extension to provide the necessary UI interface between you and the Notebook annotations. In this way, a data scientist can go from prototyping on a local laptop to a Cloud deployment without ever interacting with the command line.
 
-To simplify and streamline the deployment process even further, Kale provides a JupyterLab extension to enable deployment *directly* from the JupyterLab UI. In this way, a data scientist can go from prototyping on a local laptop to a Cloud deployment without ever interacting with the command line.
+Using Kale Launcher, you can specify all the details required to execute a Kubeflow Pipeline workflow just with a few input fields. You can also assign cells with pipeline step names and dependencies by focusing on them. The Launcher will take care of saving these annotation in the Notebook.
 
-<a href="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/jp-ui.png" target="_blank">
-  <img src="https://raw.githubusercontent.com/kubeflow-kale/kubeflow-kale.github.io/master/assets/imgs/jp-ui.png" alt="Kubeflow Kale Deployment - JupyterLab Extension"/>
+By clicking the Compile button, Kale is run in the background. It will convert the active Notebook into a pipeline and deploy it to KFP.
+
+<a href="https://github.com/kubeflow-kale/jupyterlab-kubeflow-kale" target="_blank">
+  <img src="https://raw.githubusercontent.com/kubeflow-kale/jupyterlab-kubeflow-kale/master/docs/imgs/kale-launcher-screen.png" alt="Kubeflow Kale Deployment - JupyterLab Extension"/>
 </a>
-
-
-We are currently working on improving the user experience, adding a Kubeflow specific panel in the JupyterLab left area, making it possible to specify pipeline names, description, data volumes and more directly from UI. Stay tuned for updates in the near future!
-
 
 ## Installation and Usage
 
-For more information about the project, installation and usage documentation, head over to Kale [main repository](https://github.com/kubeflow-kale/kale)
+For more information about the project, installation and usage documentation, head over to the [Kale github org](https://github.com/kubeflow-kale).
 
-For examples and use cases showcasing Kale in data science pipelines, head over to the [Examples Repository](https://github.com/kubeflow-kale/examples)
+For examples and use cases showcasing Kale in data science pipelines, head over to the [Examples Repository](https://github.com/kubeflow-kale/examples).
