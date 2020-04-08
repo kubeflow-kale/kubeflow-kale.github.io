@@ -1,7 +1,7 @@
 theme: jekyll-theme-minimal
 
 title: Kubeflow Kale
-description: A simple tool for direct and automatic deployments of Jupypter Notebooks to Kubeflow Pipelines
+description: A simple tool for direct and automatic deployments of Jupyter Notebooks to Kubeflow Pipelines
 
 logo: ./logo.png
 show_downloads: true
